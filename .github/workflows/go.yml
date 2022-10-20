@@ -13,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    - name: Set semver
+      uses: go-semantic-release/action@v1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        changelog-generator-opt: "emojis=true"
+
     - name: Check out code into the Go module directory
       uses: actions/checkout@v3
 
