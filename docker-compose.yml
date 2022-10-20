@@ -1,0 +1,32 @@
+services:
+  bank-db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bank
+    volumes:
+      - ./postgres-db:/var/lib/postgresql/data:rw
+    networks:
+      - backend
+  test-db:
+    image: postgres
+    restart: always
+    ports:
+      - 5500:5432
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test_bank
+    networks:
+      - backend
+
+networks:
+  backend:
+
+
+volumes:
+  bank-data:
