@@ -12,3 +12,6 @@ test-up:
 
 test-down:
 	migrate -path db/migration -database "postgresql://test:password@localhost:5500/test_bank?sslmode=disable" -verbose down
+
+test:
+	go test -v -cover ./repo
