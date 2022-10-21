@@ -57,6 +57,11 @@ jobs:
       with:
         go-version: 1.18
 
+    - name: Download migrate
+      run: |
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
+        sudo mv migrate.linux-amd64 /usr/bin/migrate
+
     - name: Set test data base
       run: make test-up
 
