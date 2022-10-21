@@ -39,13 +39,14 @@ jobs:
           POSTGRES_DB: test_bank
           POSTGRES_USER: test
           POSTGRES_PASSWORD: password
+          POSTGRES_PORT: 5500
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          
+
     steps:
 
     - name: Check out code into the Go module directory
@@ -56,5 +57,8 @@ jobs:
       with:
         go-version: 1.18
 
-    - name: Test
+    - name: Set test data base
+      run: make test-up
+
+    - name: Run go tests
       run: make test
