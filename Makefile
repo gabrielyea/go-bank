@@ -15,3 +15,9 @@ test-down:
 
 test:
 	go test -v -cover ./repo
+
+start:
+	go run main.go
+
+mock-db:
+	mockgen -destination db/mock/store.go github.com/gabriel/gabrielyea/go-bank/repo Store

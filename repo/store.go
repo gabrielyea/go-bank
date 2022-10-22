@@ -8,11 +8,8 @@ import (
 
 // Store defines all functions to execute db queries and transactions
 type Store interface {
-	GetTransfer(context.Context, int64) (Transfer, error)
-	GetEntry(context.Context, int64) (Entry, error)
-	GetAccount(context.Context, int64) (Account, error)
-	GetAccountForUpdate(context.Context, int64) (Account, error)
-	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
+	TransferTx(context.Context, TransferTxParams) (TransferTxResult, error)
+	Querier
 }
 
 // SQLStore provides all functions to execute SQL queries and transactions
