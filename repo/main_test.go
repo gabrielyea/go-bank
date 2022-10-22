@@ -8,12 +8,8 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/gabriel/gabrielyea/go-bank/util"
 	_ "github.com/lib/pq"
-)
-
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://test:password@localhost:5500/test_bank?sslmode=disable"
 )
 
 var testQueries *Queries
@@ -21,15 +17,24 @@ var testDB *sql.DB
 
 func TestMain(m *testing.M) {
 	var err error
+	config, err := util.LoadConfig("..")
+
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return
+	}
 	fmt.Printf("setting up connection \n")
-	cmd := exec.Command("migrate", "-path", "../db/migration", "-database", "postgresql://test:password@localhost:5500/test_bank?sslmode=disable", "-verbose", "up")
+
+	cmd := exec.Command("make", "test-up")
+	cmd.Dir = ".."
 	out, err := cmd.CombinedOutput()
+
 	fmt.Printf("out: %v\n", string(out))
 	if err != nil {
 		fmt.Printf("err: %v\n", err.Error())
 	}
 
-	testDB, err = sql.Open(dbDriver, dbSource)
+	testDB, err = sql.Open(config.DbDriver, config.TestDbSource)
 	if err != nil {
 		fmt.Printf("err.Error(): %v\n", err.Error())
 		return
@@ -50,8 +55,8 @@ func cleanUp(conn *sql.DB) {
 		fmt.Printf("err: %v\n", err.Error())
 		return
 	}
-
-	cmd := exec.Command("migrate", "-path", "../db/migration", "-database", "postgresql://test:password@localhost:5500/test_bank?sslmode=disable", "-verbose", "down")
+	cmd := exec.Command("make", "test-down")
+	cmd.Dir = ".."
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Printf("err: %v\n", err.Error())
