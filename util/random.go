@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -12,11 +13,11 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func randomInt(min, max int64) int64 {
+func RandomInt(min, max int64) int64 {
 	return min + rand.Int63n(max-min+1)
 }
 
-func randomString(n int) string {
+func RandomString(n int) string {
 	var sb strings.Builder
 
 	k := len(alphabet)
@@ -29,9 +30,13 @@ func randomString(n int) string {
 }
 
 func RandomOwner() string {
-	letters := randomInt(6, 15)
-	owner := randomString(int(letters))
+	letters := RandomInt(6, 15)
+	owner := RandomString(int(letters))
 	return owner
+}
+
+func RandomEmail() string {
+	return fmt.Sprintf("%s@email.com", RandomString(6))
 }
 
 func RandomCurrency() string {
@@ -42,5 +47,5 @@ func RandomCurrency() string {
 }
 
 func RandomMoney() int64 {
-	return randomInt(0, 100000)
+	return RandomInt(0, 100000)
 }
