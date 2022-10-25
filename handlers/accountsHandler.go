@@ -8,11 +8,20 @@ import (
 
 	"github.com/gabriel/gabrielyea/go-bank/repo"
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 )
+
+type AccountInt interface {
+	CreateAccount(*gin.Context)
+	GetAccount(*gin.Context)
+	ListAccounts(*gin.Context)
+	DeleteAccount(*gin.Context)
+	UpdateAccount(*gin.Context)
+}
 
 type createAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
+	Currency string `json:"currency" binding:"required,currency"`
 }
 
 func (h *handler) CreateAccount(c *gin.Context) {
@@ -30,8 +39,17 @@ func (h *handler) CreateAccount(c *gin.Context) {
 
 	account, err := h.Store.CreateAccount(c, arg)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		if pkErr, ok := err.(*pq.Error); ok {
+			switch pkErr.Code.Name() {
+			case "foreign_key_violation", "unique_violation":
+				c.JSON(http.StatusForbidden, errorResponse(pkErr))
+				return
+			}
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

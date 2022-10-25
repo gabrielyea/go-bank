@@ -6,12 +6,9 @@ import (
 )
 
 type HandlersInt interface {
-	CreateAccount(*gin.Context)
-	GetAccount(*gin.Context)
-	ListAccounts(*gin.Context)
-	DeleteAccount(*gin.Context)
-	UpdateAccount(*gin.Context)
-	// SetUpServer() *gin.Engine
+	AccountInt
+	TransferInt
+	UserInterface
 }
 
 type handler struct {
