@@ -177,8 +177,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 			repo := mock_repo.NewMockStore(ctrl)
 			tc.buildStubs(repo)
-			h := NewHandler(repo)
-			server := SetUpServer(h)
+			server := newTestServer(t, repo)
 
 			recorder := httptest.NewRecorder()
 

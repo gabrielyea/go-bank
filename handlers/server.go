@@ -1,16 +1,27 @@
 package handlers
 
 import (
+	"fmt"
+
+	"github.com/gabriel/gabrielyea/go-bank/token"
+	"github.com/gabriel/gabrielyea/go-bank/util"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
 type Server struct {
-	Router *gin.Engine
+	Router     *gin.Engine
+	tokenMaker token.Maker
+	config     util.Config
 }
 
-func SetUpServer(h HandlersInt) *Server {
+func SetUpServer(config util.Config, h HandlersInt) *Server {
+	tMaker, err := token.NewPasetoMaker(config.SymmetricKey)
+	if err != nil {
+		fmt.Printf("err: %v\n", err.Error())
+		return nil
+	}
 	server := gin.Default()
 	router := server
 
@@ -27,11 +38,13 @@ func SetUpServer(h HandlersInt) *Server {
 	router.PATCH("/accounts", h.UpdateAccount)
 
 	return &Server{
-		Router: router,
+		Router:     router,
+		tokenMaker: tMaker,
+		config:     config,
 	}
 }
 
-func RunServer(h HandlersInt) {
-	serv := SetUpServer(h)
+func RunServer(config util.Config, h HandlersInt) {
+	serv := SetUpServer(config, h)
 	serv.Router.Run()
 }
