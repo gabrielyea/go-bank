@@ -75,6 +75,15 @@ func TestAuthMiddleware(t *testing.T) {
 				require.Equal(t, recorder.Code, http.StatusUnauthorized)
 			},
 		},
+		{
+			name: "TokenExpired",
+			setupAuth: func(t *testing.T, request *http.Request, tMaker token.Maker) {
+				addAuthorization(t, request, tMaker, authType, "user", -time.Minute)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, recorder.Code, http.StatusUnauthorized)
+			},
+		},
 	}
 
 	for i := range testCases {

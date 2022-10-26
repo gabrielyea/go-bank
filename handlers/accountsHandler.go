@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gabriel/gabrielyea/go-bank/middleware"
 	"github.com/gabriel/gabrielyea/go-bank/repo"
+	"github.com/gabriel/gabrielyea/go-bank/token"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
@@ -20,21 +22,22 @@ type AccountInt interface {
 }
 
 type createAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,currency"`
+	Balance  int64  `json:"balance" binding:"required,min=0"`
 }
 
 func (h *handler) CreateAccount(c *gin.Context) {
 	var req createAccountRequest
+	payload := c.MustGet(middleware.AuthKeys()["payloadKey"]).(*token.Payload)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	arg := repo.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    payload.UserName,
 		Currency: req.Currency,
-		Balance:  0,
+		Balance:  req.Balance,
 	}
 
 	account, err := h.Store.CreateAccount(c, arg)
@@ -45,6 +48,7 @@ func (h *handler) CreateAccount(c *gin.Context) {
 				c.JSON(http.StatusForbidden, errorResponse(pkErr))
 				return
 			}
+			return
 		}
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -62,8 +66,9 @@ type getAccountRequest struct {
 }
 
 func (h *handler) GetAccount(c *gin.Context) {
-	fmt.Printf("CurrentServer: %v\n", CurrentServer)
 	var req getAccountRequest
+	payload := c.MustGet(middleware.AuthKeys()["payloadKey"]).(*token.Payload)
+
 	if err := c.ShouldBindUri(&req); err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -78,6 +83,11 @@ func (h *handler) GetAccount(c *gin.Context) {
 			errMsg = errors.New(fmt.Sprintf("no account with id: %v found", req.ID))
 		}
 		c.JSON(status, errorResponse(errMsg))
+		return
+	}
+
+	if payload.UserName != account.Owner {
+		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
@@ -97,7 +107,9 @@ func (h *handler) ListAccounts(c *gin.Context) {
 		return
 	}
 
+	payload := c.MustGet(middleware.AuthKeys()["payloadKey"]).(*token.Payload)
 	arg := repo.ListAccountsParams{
+		Owner:  payload.UserName,
 		Limit:  req.PageSize,
 		Offset: (req.PageId - 1) * req.PageSize,
 	}
@@ -110,7 +122,6 @@ func (h *handler) ListAccounts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"list": accountList,
 	})
-
 }
 
 type deleteAccountRequest struct {
