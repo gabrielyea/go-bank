@@ -62,6 +62,7 @@ type getAccountRequest struct {
 }
 
 func (h *handler) GetAccount(c *gin.Context) {
+	fmt.Printf("CurrentServer: %v\n", CurrentServer)
 	var req getAccountRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(err))

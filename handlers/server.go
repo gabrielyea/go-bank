@@ -10,9 +10,11 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+var CurrentServer Server
+
 type Server struct {
 	Router     *gin.Engine
-	tokenMaker token.Maker
+	TokenMaker token.Maker
 	config     util.Config
 }
 
@@ -30,18 +32,22 @@ func SetUpServer(config util.Config, h HandlersInt) *Server {
 	}
 
 	router.POST("/accounts", h.CreateAccount)
+	router.GET("/accounts/:id", h.GetAccount)
+	router.GET("/accounts", h.ListAccounts)
 	router.POST("/transfers", h.CreateTransfer)
 	router.POST("/users", h.CreateUser)
-	router.GET("/accounts/:id", h.GetAccount)
-	router.GET("accounts", h.ListAccounts)
-	router.DELETE("accounts/:id", h.DeleteAccount)
+	router.POST("/login", h.LogIn)
 	router.PATCH("/accounts", h.UpdateAccount)
+	router.DELETE("/accounts/:id", h.DeleteAccount)
 
-	return &Server{
+	s := &Server{
 		Router:     router,
-		tokenMaker: tMaker,
+		TokenMaker: tMaker,
 		config:     config,
 	}
+
+	CurrentServer = *s
+	return s
 }
 
 func RunServer(config util.Config, h HandlersInt) {

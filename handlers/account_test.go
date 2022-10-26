@@ -91,7 +91,7 @@ func TestGetAccountHandler(t *testing.T) {
 
 			repo := mock_repo.NewMockStore(ctrl)
 			tc.buildStubs(repo)
-			server := newTestServer(t, repo)
+			server := NewTestServer(t, repo)
 
 			recorder := httptest.NewRecorder()
 
