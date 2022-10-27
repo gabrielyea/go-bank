@@ -31,15 +31,6 @@ func SetUpServer(config util.Config, h HandlersInt) *Server {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
-	// router.POST("/accounts", h.CreateAccount)
-	// router.GET("/accounts/:id", h.GetAccount)
-	// router.GET("/accounts", h.ListAccounts)
-	// router.POST("/transfers", h.CreateTransfer)
-	// router.POST("/users", h.CreateUser)
-	// router.POST("/login", h.LogIn)
-	// router.PATCH("/accounts", h.UpdateAccount)
-	// router.DELETE("/accounts/:id", h.DeleteAccount)
-
 	SetRoutes(router, h, tMaker)
 
 	s := &Server{

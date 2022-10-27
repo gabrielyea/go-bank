@@ -9,27 +9,51 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	mock_repo "github.com/gabriel/gabrielyea/go-bank/db/mock"
+	"github.com/gabriel/gabrielyea/go-bank/middleware"
 	"github.com/gabriel/gabrielyea/go-bank/repo"
+	"github.com/gabriel/gabrielyea/go-bank/token"
 
 	"github.com/gabriel/gabrielyea/go-bank/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
+func AddAuthorization(
+	t *testing.T,
+	request *http.Request,
+	tm token.Maker,
+	authType string,
+	username string,
+	duration time.Duration,
+) {
+	token, err := tm.CreateToken(username, duration)
+	require.NoError(t, err)
+
+	authHeader := fmt.Sprintf("%s %s", authType, token)
+	request.Header.Set(middleware.AuthKeys()["headerKey"], authHeader)
+}
+
 func TestGetAccountHandler(t *testing.T) {
+	user, _ := randomUser(t)
 	account := randomAccount()
+	account.Owner = user.UserName
 
 	testCases := []struct {
 		name          string
 		accountID     int64
+		setupAuth     func(t *testing.T, request *http.Request, tMaker token.Maker)
 		buildStubs    func(r *mock_repo.MockStore)
 		checkResponse func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
 			name:      "OK",
 			accountID: account.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tMaker token.Maker) {
+				AddAuthorization(t, request, tMaker, middleware.AuthKeys()["auth"], user.UserName, time.Minute)
+			},
 			buildStubs: func(r *mock_repo.MockStore) {
 				r.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -45,6 +69,9 @@ func TestGetAccountHandler(t *testing.T) {
 		{
 			name:      "NotFound",
 			accountID: account.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tMaker token.Maker) {
+				AddAuthorization(t, request, tMaker, middleware.AuthKeys()["auth"], user.UserName, time.Minute)
+			},
 			buildStubs: func(r *mock_repo.MockStore) {
 				r.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -58,6 +85,9 @@ func TestGetAccountHandler(t *testing.T) {
 		{
 			name:      "InternalError",
 			accountID: account.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tMaker token.Maker) {
+				AddAuthorization(t, request, tMaker, middleware.AuthKeys()["auth"], user.UserName, time.Minute)
+			},
 			buildStubs: func(r *mock_repo.MockStore) {
 				r.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -71,6 +101,9 @@ func TestGetAccountHandler(t *testing.T) {
 		{
 			name:      "InvalidId",
 			accountID: 0,
+			setupAuth: func(t *testing.T, request *http.Request, tMaker token.Maker) {
+				AddAuthorization(t, request, tMaker, middleware.AuthKeys()["auth"], user.UserName, time.Minute)
+			},
 			buildStubs: func(r *mock_repo.MockStore) {
 				r.EXPECT().
 					GetAccount(gomock.Any(), gomock.Any()).
@@ -97,9 +130,10 @@ func TestGetAccountHandler(t *testing.T) {
 
 			url := fmt.Sprintf("/accounts/%d", tc.accountID)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
-			server.Router.ServeHTTP(recorder, request)
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.TokenMaker)
+			server.Router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
 	}
