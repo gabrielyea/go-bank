@@ -24,6 +24,7 @@ func SetUpServer(config util.Config, h HandlersInt) *Server {
 		fmt.Printf("err: %v\n", err.Error())
 		return nil
 	}
+
 	server := gin.Default()
 	router := server
 
